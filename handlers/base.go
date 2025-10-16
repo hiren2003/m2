@@ -51,4 +51,4 @@ func deferredClose(c io.ReadCloser) {
 	if err != nil {
 		log.Println("Error closing request", err)
 	}
-}
+
