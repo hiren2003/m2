@@ -1,0 +1,55 @@
+name: Go CI Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  verify:
+    name: Lint, Test, and Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️ Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️ Setup Go
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      # 3️ Cache dependencies for faster builds
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      # 4️ Run GolangCI-Lint first for fast feedback
+      - name: Run GolangCI-Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=3m
+
+      # 5️ Run all Go tests with coverage measurement
+      - name: Run Go tests with coverage
+        run: |
+          echo "Running tests with coverage..."
+          go test ./... -v -coverprofile=coverage.out
+
+      # 6️ Display coverage summary
+      - name: Show coverage summary
+        run: go tool cover -func=coverage.out
