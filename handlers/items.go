@@ -17,7 +17,7 @@ func NewItemHandler(store stores.ItemStore) *ItemHandler {
 		store: store,
 	}
 }
-
+//
 func (i *ItemHandler) listItems(w http.ResponseWriter, r *http.Request) {
 	items, err := i.store.GetAllItems()
 	if err != nil {
