@@ -79,5 +79,6 @@ func (i *ItemHandler) deleteItem(w http.ResponseWriter, r *http.Request) {
 	err := i.store.DeleteItem(vars["ID"])
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "")
+		//
 	}
 }
