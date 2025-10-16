@@ -3,12 +3,13 @@ name: Go CI Pipeline
 on:
   pull_request:
     branches:
-      - main
+      - master
+      - hiren2003-patch-2
       - develop
   push:
     branches:
-      - main
-      - develop
+      - master
+      - hiren2003-patch-2
 
 jobs:
   verify:
