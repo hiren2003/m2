@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/hs-heilbronn-devsecops/acetlisto/stores"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,18 +23,19 @@ func performRequest(r *mux.Router, method, path string, body []byte) *httptest.R
 
 // --- Test: CreateItem ---
 func TestCreateItem(t *testing.T) {
-	router := New()
+	store := stores.NewMemoryItemStore()
+	router := New(store)
 
 	body := []byte(`{"Name":"Oil","Description":"Should be nice!"}`)
 	resp := performRequest(router, "POST", "/items/", body)
 
-	// Fix: expect 201 Created
 	assert.Equal(t, http.StatusCreated, resp.Code)
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(resp.Body.Bytes(), &result); err != nil {
 		t.Fatalf("Failed to unmarshal create response: %v", err)
 	}
+
 	assert.Contains(t, result, "id")
 	assert.Equal(t, "Oil", result["name"])
 	assert.Equal(t, "Should be nice!", result["description"])
@@ -41,7 +43,8 @@ func TestCreateItem(t *testing.T) {
 
 // --- Test: ListItems ---
 func TestListItems(t *testing.T) {
-	router := New()
+	store := stores.NewMemoryItemStore()
+	router := New(store)
 
 	body := []byte(`{"Name":"Milk","Description":"2 liters"}`)
 	createResp := performRequest(router, "POST", "/items/", body)
@@ -59,7 +62,8 @@ func TestListItems(t *testing.T) {
 
 // --- Test: GetItem ---
 func TestGetItem_Handler(t *testing.T) {
-	router := New()
+	store := stores.NewMemoryItemStore()
+	router := New(store)
 
 	createBody := []byte(`{"Name":"Eggs","Description":"Free range"}`)
 	createResp := performRequest(router, "POST", "/items/", createBody)
@@ -78,6 +82,7 @@ func TestGetItem_Handler(t *testing.T) {
 	if err := json.Unmarshal(getResp.Body.Bytes(), &fetched); err != nil {
 		t.Fatalf("Failed to unmarshal get response: %v", err)
 	}
+
 	assert.Equal(t, created["id"], fetched["id"])
 	assert.Equal(t, created["name"], fetched["name"])
 	assert.Equal(t, created["description"], fetched["description"])
@@ -85,7 +90,8 @@ func TestGetItem_Handler(t *testing.T) {
 
 // --- Test: UpdateItem ---
 func TestUpdateItem(t *testing.T) {
-	router := New()
+	store := stores.NewMemoryItemStore()
+	router := New(store)
 
 	createBody := []byte(`{"Name":"Bread","Description":"White bread"}`)
 	createResp := performRequest(router, "POST", "/items/", createBody)
@@ -105,13 +111,15 @@ func TestUpdateItem(t *testing.T) {
 	if err := json.Unmarshal(updateResp.Body.Bytes(), &updated); err != nil {
 		t.Fatalf("Failed to unmarshal update response: %v", err)
 	}
+
 	assert.Equal(t, "Brown Bread", updated["name"])
 	assert.Equal(t, "Whole grain bread", updated["description"])
 }
 
 // --- Test: DeleteItem ---
 func TestDeleteItem(t *testing.T) {
-	router := New()
+	store := stores.NewMemoryItemStore()
+	router := New(store)
 
 	createBody := []byte(`{"Name":"Juice","Description":"Apple juice"}`)
 	createResp := performRequest(router, "POST", "/items/", createBody)
@@ -132,7 +140,9 @@ func TestDeleteItem(t *testing.T) {
 
 // --- Test: Invalid ID ---
 func TestGetItem_NotFound_Handler(t *testing.T) {
-	router := New()
+	store := stores.NewMemoryItemStore()
+	router := New(store)
+
 	resp := performRequest(router, "GET", "/items/nonexistent-id", nil)
 	assert.NotEqual(t, http.StatusOK, resp.Code)
 }
